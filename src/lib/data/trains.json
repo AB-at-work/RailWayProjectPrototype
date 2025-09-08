@@ -1,0 +1,44 @@
+{
+  "trains": [
+    {
+      "id": "T-234",
+      "type": "passenger",
+      "priority": "high",
+      "route": ["N1", "N2", "N3"],
+      "schedule": [
+        { "node": "N1", "arrival": "14:00", "departure": "14:05" },
+        { "node": "N2", "arrival": "14:30", "departure": "14:32" },
+        { "node": "N3", "arrival": "15:00", "departure": "15:00" }
+      ],
+      "maxSpeed": 100,
+      "length": 200
+    },
+    {
+      "id": "T-567",
+      "type": "freight",
+      "priority": "medium",
+      "route": ["N4", "N5", "N3"],
+      "schedule": [
+        { "node": "N4", "arrival": "14:15", "departure": "14:20" },
+        { "node": "N5", "arrival": "14:45", "departure": "14:50" },
+        { "node": "N3", "arrival": "15:15", "departure": "15:15" }
+      ],
+      "maxSpeed": 80,
+      "length": 350
+    },
+    {
+      "id": "T-891",
+      "type": "passenger",
+      "priority": "high",
+      "route": ["N1", "N4", "N5", "N3"],
+      "schedule": [
+        { "node": "N1", "arrival": "14:30", "departure": "14:35" },
+        { "node": "N4", "arrival": "15:00", "departure": "15:02" },
+        { "node": "N5", "arrival": "15:20", "departure": "15:22" },
+        { "node": "N3", "arrival": "15:45", "departure": "15:45" }
+      ],
+      "maxSpeed": 90,
+      "length": 180
+    }
+  ]
+}
