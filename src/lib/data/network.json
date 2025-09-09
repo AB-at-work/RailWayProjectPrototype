@@ -1,16 +1,51 @@
 {
   "nodes": [
-    { "id": "N1", "name": "Central Station", "type": "station", "capacity": 5 },
-    { "id": "N2", "name": "North Junction", "type": "junction", "capacity": 3 },
-    { "id": "N3", "name": "East Terminal", "type": "terminal", "capacity": 4 },
-    { "id": "N4", "name": "West Yard", "type": "yard", "capacity": 6 },
-    { "id": "N5", "name": "South Crossing", "type": "crossing", "capacity": 2 }
+    {
+      "id": "N1",
+      "name": "Central Station",
+      "type": "station",
+      "capacity": 5,
+      "lat": 28.6139,
+      "lon": 77.2090
+    },
+    {
+      "id": "N2",
+      "name": "North Junction",
+      "type": "junction",
+      "capacity": 3,
+      "lat": 28.6448,
+      "lon": 77.2167
+    },
+    {
+      "id": "N3",
+      "name": "East Terminal",
+      "type": "terminal",
+      "capacity": 4,
+      "lat": 28.6304,
+      "lon": 77.2982
+    },
+    {
+      "id": "N4",
+      "name": "West Yard",
+      "type": "yard",
+      "capacity": 6,
+      "lat": 28.6061,
+      "lon": 77.0373
+    },
+    {
+      "id": "N5",
+      "name": "South Crossing",
+      "type": "crossing",
+      "capacity": 2,
+      "lat": 28.5355,
+      "lon": 77.3910
+    }
   ],
   "edges": [
-    { "id": "E1", "from": "N1", "to": "N2", "length": 15.2, "maxSpeed": 100, "capacity": 2 },
-    { "id": "E2", "from": "N2", "to": "N3", "length": 22.8, "maxSpeed": 120, "capacity": 2 },
-    { "id": "E3", "from": "N1", "to": "N4", "length": 18.5, "maxSpeed": 80, "capacity": 1 },
-    { "id": "E4", "from": "N4", "to": "N5", "length": 12.3, "maxSpeed": 90, "capacity": 1 },
-    { "id": "E5", "from": "N5", "to": "N3", "length": 16.7, "maxSpeed": 100, "capacity": 2 }
+    { "id": "E1", "from": "N1", "to": "N2", "length": 15.2, "maxSpeed": 100, "capacity": 2, "status": "open" },
+    { "id": "E2", "from": "N2", "to": "N3", "length": 22.8, "maxSpeed": 120, "capacity": 2, "status": "open" },
+    { "id": "E3", "from": "N1", "to": "N4", "length": 18.5, "maxSpeed": 80, "capacity": 1, "status": "open" },
+    { "id": "E4", "from": "N4", "to": "N5", "length": 12.3, "maxSpeed": 90, "capacity": 1, "status": "open" },
+    { "id": "E5", "from": "N5", "to": "N3", "length": 16.7, "maxSpeed": 100, "capacity": 2, "status": "open" }
   ]
 }
