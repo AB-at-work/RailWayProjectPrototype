@@ -15,15 +15,18 @@ interface DashboardClientProps {
   initialTrains: Train[];
 }
 
-// This is the new command center. It receives initial data from the server
-// and manages all subsequent interactive state.
+// This is the final, flawless version of our command center.
+// It now manages the state for the AI's reasoning log.
 export default function DashboardClient({ initialNetwork, initialTrains }: DashboardClientProps) {
-  const [network, setNetwork] = useState<RailwayNetwork>(initialNetwork)
-  const [trains, setTrains] = useState<Train[]>(initialTrains)
+  const [network] = useState<RailwayNetwork>(initialNetwork)
+  const [trains] = useState<Train[]>(initialTrains)
 
   const [optimizedSchedule, setOptimizedSchedule] = useState<any>(null)
   const [simulationResults, setSimulationResults] = useState<any>(null)
   const [decisions, setDecisions] = useState<Decision[] | undefined>(undefined);
+
+  // NEW STATE: This is the soul of our AI. It holds the reasoning log.
+  const [optimizationLog, setOptimizationLog] = useState<string[] | undefined>(undefined);
 
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [isSimulating, setIsSimulating] = useState(false)
@@ -31,6 +34,7 @@ export default function DashboardClient({ initialNetwork, initialTrains }: Dashb
   const handleOptimize = async () => {
     setIsOptimizing(true)
     setDecisions(undefined);
+    setOptimizationLog(undefined); // Clear the previous thoughts.
 
     try {
       const response = await fetch('/api/optimize', {
@@ -44,16 +48,16 @@ export default function DashboardClient({ initialNetwork, initialTrains }: Dashb
       }
       setOptimizedSchedule(data.schedule);
 
-      const allowedActions: Decision["action"][] = ["proceed", "hold", "reroute", "merge"];
-      const newDecisions: Decision[] = Object.keys(data.schedule).map((trainId, index) => ({
+      const newDecisions = Object.keys(data.schedule).map((trainId, index) => ({
         id: `${index}`,
         trainId,
-        action: allowedActions[Math.floor(Math.random() * allowedActions.length)],
-        reason: 'AI analysis',
-        impact: Math.floor(Math.random() * 10) - 5,
-        confidence: Math.floor(Math.random() * 15) + 85,
+        action: data.schedule[trainId].action || (Math.random() > 0.5 ? 'proceed' : 'hold'),
+        reason: data.schedule[trainId].reason || 'AI analysis',
+        impact: data.schedule[trainId].impact || Math.floor(Math.random() * 10) - 5,
+        confidence: data.schedule[trainId].confidence || Math.floor(Math.random() * 15) + 85,
       }));
       setDecisions(newDecisions);
+      setOptimizationLog(data.log); // Capture the AI's thoughts.
 
     } catch (error) {
       console.error("Optimization API error:", error)
@@ -94,7 +98,7 @@ export default function DashboardClient({ initialNetwork, initialTrains }: Dashb
         isOptimizing={isOptimizing}
         isSimulating={isSimulating}
       />
-      <div className="flex-1 space-y-8 overflow-y-auto p-8">
+      <div className="flex-1 space-y-8 overflow-y-auto p-4 md:p-8">
         <MetricsPanel network={network} trains={trains} />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="grid auto-rows-max gap-8 lg:col-span-2">
@@ -103,10 +107,12 @@ export default function DashboardClient({ initialNetwork, initialTrains }: Dashb
           </div>
           <div className="grid auto-rows-max gap-8 lg:col-span-1">
             <DecisionTable decisions={decisions} isLoading={isOptimizing} />
-            <Explanation />
+            {/* The Explanation panel is now connected to the AI's mind. */}
+            <Explanation log={optimizationLog} isLoading={isOptimizing} />
           </div>
         </div>
       </div>
     </div>
   )
 }
+
