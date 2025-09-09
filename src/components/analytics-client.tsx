@@ -81,7 +81,7 @@ export default function AnalyticsClient({ initialNetwork, initialTrains }: Analy
   }
 
   return (
-    <div className="h-screen overflow-hidden p-4 md:p-8">
+    <div className="min-h-screen overflow-y-auto p-4 md:p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -189,197 +189,168 @@ export default function AnalyticsClient({ initialNetwork, initialTrains }: Analy
       </div>
 
       {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 h-[calc(100vh-400px)]">
-        {/* Performance Over Time */}
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Performance Analytics - 24H View
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="hour" className="text-muted-foreground" />
-                <YAxis className="text-muted-foreground" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="onTime"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  name="On-Time %"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="delayed"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  name="Delayed %"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="throughput"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  name="Throughput"
-                  yAxisId="right"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Main Charts Grid */}
+<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-        {/* Node Utilization */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Network Utilization
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={utilizationData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="name"
-                  className="text-muted-foreground"
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis className="text-muted-foreground" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Bar
-                  dataKey="utilization"
-                  fill="#3b82f6"
-                  name="Utilization %"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+  {selectedMetric === 'performance' && (
+    <Card className="xl:col-span-2">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          Performance Analytics - 24H View
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={performanceData}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis dataKey="hour" className="text-muted-foreground" />
+            <YAxis className="text-muted-foreground" />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="onTime" stroke="#22c55e" strokeWidth={2} name="On-Time %" />
+            <Line type="monotone" dataKey="delayed" stroke="#f59e0b" strokeWidth={2} name="Delayed %" />
+            <Line type="monotone" dataKey="throughput" stroke="#3b82f6" strokeWidth={2} name="Throughput" yAxisId="right" />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  )}
 
-        {/* Train Type Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
-              Train Type Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={trainTypeData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => {
-                    const total = trainTypeData.reduce((sum, item) => sum + item.value, 0);
-                    const percent = total > 0 ? (Number(value) / total) * 100 : 0;
-                    return `${name}: ${percent.toFixed(0)}%`
-                  }}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {trainTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+  {selectedMetric === 'utilization' && (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Network Utilization
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={utilizationData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="name" className="text-muted-foreground" angle={-45} textAnchor="end" height={80} />
+              <YAxis className="text-muted-foreground" />
+              <Tooltip contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }} />
+              <Bar dataKey="utilization" fill="#3b82f6" name="Utilization %" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-        {/* Priority Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Priority Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={priorityData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ value, name }) => {
-                    const total = priorityData.reduce((sum, item) => sum + item.value, 0);
-                    const percent = total > 0 ? (Number(value) / total) * 100 : 0;
-                    return `${percent.toFixed(0)}%`
-                  }}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {priorityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Critical Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Critical Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {utilizationData
-                .filter(node => node.utilization > 85)
-                .map(node => (
-                  <div key={node.name} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                    <div>
-                      <p className="font-medium text-red-900 dark:text-red-100">{node.name}</p>
-                      <p className="text-sm text-red-700 dark:text-red-300">High utilization detected</p>
-                    </div>
-                    <Badge variant="destructive">
-                      {node.utilization.toFixed(1)}%
-                    </Badge>
-                  </div>
-                ))}
-
-              {utilizationData.filter(node => node.utilization > 85).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>All systems operating within normal parameters</p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            Critical Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {utilizationData.filter(node => node.utilization > 85).map(node => (
+              <div key={node.name} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
+                <div>
+                  <p className="font-medium text-red-900 dark:text-red-100">{node.name}</p>
+                  <p className="text-sm text-red-700 dark:text-red-300">High utilization detected</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <Badge variant="destructive">{node.utilization.toFixed(1)}%</Badge>
+              </div>
+            ))}
+            {utilizationData.filter(node => node.utilization > 85).length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>All systems operating within normal parameters</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  )}
+
+  {selectedMetric === 'efficiency' && (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PieChartIcon className="h-5 w-5" />
+            Train Type Distribution
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={trainTypeData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => {
+                  const total = trainTypeData.reduce((sum, item) => sum + item.value, 0);
+                  const percent = total > 0 ? (Number(value) / total) * 100 : 0;
+                  return `${name}: ${percent.toFixed(0)}%`
+                }}
+                outerRadius={80}
+                dataKey="value"
+              >
+                {trainTypeData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Priority Distribution
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={priorityData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ value }) => {
+                  const total = priorityData.reduce((sum, item) => sum + item.value, 0);
+                  const percent = total > 0 ? (Number(value) / total) * 100 : 0;
+                  return `${percent.toFixed(0)}%`
+                }}
+                outerRadius={80}
+                dataKey="value"
+              >
+                {priorityData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </>
+  )}
+
+</div>
+
     </div>
   )
 }

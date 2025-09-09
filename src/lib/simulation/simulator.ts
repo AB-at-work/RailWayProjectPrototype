@@ -99,7 +99,9 @@ function generateTimeline(events: SimulationEvent[]): TimelineEvent[] {
       location: event.node,
       status: event.conflict ? 'conflict' : (event.delay > 0 ? 'delayed' : 'on_time'),
       type: event.conflict ? 'conflict' : (event.delay > 0 ? 'delay' : 'arrival'),
-      details: event
+      details: event,
+      train: event.trainId, // Added property
+      event: event.conflict ? 'conflict' : (event.delay > 0 ? 'delay' : 'arrival') // Changed to string type
     }));
 }
 

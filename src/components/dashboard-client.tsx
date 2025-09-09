@@ -8,7 +8,7 @@ import DecisionTable, { Decision } from "@/components/DecisionPanel/DecisionTabl
 import Explanation from "@/components/DecisionPanel/Explanation"
 import { RailwayNetwork, Train, Edge } from "@/lib/types"
 import Navbar from "@/components/Layout/Navbar"
-import DisruptionPanel from "@/components/DisruptionPanel/disruptionpanel"
+import DisruptionPanel from "@/components/DisruptionPanel/DisruptionPanel"
 
 interface DashboardClientProps {
   initialNetwork: RailwayNetwork
@@ -54,26 +54,39 @@ export default function DashboardClient({ initialNetwork, initialTrains }: Dashb
   }
 
   const handleSimulate = async () => {
-    setIsSimulating(true)
-    try {
-      const scheduleToSimulate = optimizedSchedule || trains.reduce((acc, train) => ({ ...acc, [train.id]: train.schedule }), {})
-      const response = await fetch("/api/simulate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // The simulator also receives the CURRENT, potentially disrupted network state.
-        body: JSON.stringify({ network, schedule: scheduleToSimulate }),
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || "Simulation failed")
-      }
-      setSimulationResults(data.simulation)
-    } catch (error) {
-      console.error("Simulation API error:", error)
-    } finally {
-      setIsSimulating(false)
+  setIsSimulating(true);
+  try {
+    let scheduleToSimulate = optimizedSchedule;
+
+    if (!scheduleToSimulate) {
+      // fallback: give each train a simple dummy schedule
+      scheduleToSimulate = trains.reduce((acc, train, index) => {
+        acc[train.id] = [
+          { station: network.nodes[0]?.id || "S1", time: index * 5 },
+          { station: network.nodes[network.nodes.length - 1]?.id || "S2", time: (index + 1) * 10 }
+        ];
+        return acc;
+      }, {} as Record<string, any>);
     }
+
+    const response = await fetch("/api/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ network, schedule: scheduleToSimulate }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Simulation failed");
+    }
+    setSimulationResults(data.simulation);
+  } catch (error) {
+    console.error("Simulation API error:", error);
+  } finally {
+    setIsSimulating(false);
   }
+};
+
 
   // COMMAND: Introduce Disruption
   const handleDisruption = (edgeId: string) => {

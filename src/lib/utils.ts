@@ -36,3 +36,21 @@ export function validateInput(
   }
   return null
 }
+
+/**
+ * Converts a time string in "HH:MM" format to total minutes since midnight.
+ */
+export function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+/**
+ * Converts total minutes since midnight back to "HH:MM" format.
+ * Ensures values wrap correctly (e.g. 1500 minutes → 01:00 next day).
+ */
+export function minutesToTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60) % 24;
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
