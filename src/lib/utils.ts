@@ -4,6 +4,11 @@ import type { RailwayNetwork, Train } from './types'; // Adjust the path as need
  * Validates the core data structures of the application. A critical safeguard
  * against corrupted or malformed input. This function is EXPORTED.
  */
+
+export function cn(...classes: (string | undefined | null | false)[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
 export function validateInput(
   network: RailwayNetwork,
   trains: Train[],
