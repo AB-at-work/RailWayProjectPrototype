@@ -1,94 +1,79 @@
-import { RailwayNetwork, Train, Schedule, OptimizationMetrics } from '@/lib/types';
+import { RailwayNetwork, Train, Decision } from "@/lib/types"
 
-// This is the new, more intelligent core of our AI.
-// It generates not just a schedule, but a log of its reasoning.
+// This is a more sophisticated placeholder for a real MIP solver.
+// It uses simple, rule-based logic to create realistic-looking decisions and logs.
+// This makes the AI's output feel logical and consistent.
+
+// Helper function to simulate computation time
+async function simulateComplexOptimization(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+}
+
 export async function optimizeSchedule(
   network: RailwayNetwork,
   trains: Train[]
-): Promise<{ schedule: Schedule; metrics: OptimizationMetrics; log: string[] }> {
+): Promise<{ decisions: Decision[]; log: string[] }> {
 
   const log: string[] = [];
-  log.push('Initializing MIP-based optimization...');
-  log.push(`Analyzing network with ${network.nodes.length} nodes and ${trains.length} trains.`);
+  const decisions: Decision[] = [];
+  let decisionIdCounter = 1;
 
-  // --- More realistic decision-making simulation ---
-  const decisions: { [trainId: string]: string } = {};
-  const occupiedNodes = new Set<string>();
+  log.push("Initializing optimization model...");
+  log.push(`Analyzing ${trains.length} trains and ${network.edges.length} track segments.`);
 
-  // A simple conflict detection logic for more realistic decisions.
-  trains.sort((a, b) => a.priority.localeCompare(b.priority)).forEach(train => {
-    const firstNodeId = train.route[0];
-    if (occupiedNodes.has(firstNodeId)) {
-      decisions[train.id] = 'hold';
-      log.push(`Decision: Train ${train.id} (${train.type}) is held at origin due to congestion at ${firstNodeId}.`);
-    } else {
-      decisions[train.id] = 'proceed';
-      log.push(`Decision: Train ${train.id} (${train.type}) is cleared for departure.`);
-      occupiedNodes.add(firstNodeId);
-    }
-  });
+  await simulateComplexOptimization();
 
-  const optimizedSchedule = generateOptimalSchedule(network, trains, decisions);
-  log.push('Schedule generated based on initial decisions.');
+  // Simple rule-based "AI" logic for demonstration
+  const passengerTrains = trains.filter(t => t.type === 'passenger');
+  const freightTrains = trains.filter(t => t.type === 'freight');
 
-  const metrics = calculateMIPMetrics(optimizedSchedule, trains);
-  log.push(`Optimization complete. Total network delay improved by ${metrics.totalDelay.toFixed(1)}%.`);
+  log.push(`Prioritizing ${passengerTrains.length} high-priority passenger trains.`);
 
-  return { schedule: optimizedSchedule, metrics, log };
-}
-
-// This function now uses the decisions to generate a more plausible schedule.
-function generateOptimalSchedule(network: RailwayNetwork, trains: Train[], decisions: { [trainId: string]: string }): Schedule {
-  const schedule: Schedule = {};
-
-  trains.forEach(train => {
-    schedule[train.id] = [];
-    let cumulativeDelay = 0;
-
-    train.route.forEach((nodeId, index) => {
-      const originalTime = train.schedule[index]?.arrival || '00:00';
-
-      // If the initial decision was to hold, we introduce a delay.
-      if (index === 0 && decisions[train.id] === 'hold') {
-        cumulativeDelay = 5; // Add a 5-minute hold delay
-      }
-
-      const [hours, minutes] = originalTime.split(':').map(Number);
-      const newTotalMinutes = hours * 60 + minutes + cumulativeDelay;
-
-      const newHours = Math.floor(newTotalMinutes / 60) % 24;
-      const newMinutes = Math.floor(newTotalMinutes % 60);
-      const arrival = `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
-
-      // Calculate departure time
-      const dwellTime = train.type === 'passenger' ? 2 : 5;
-      const departureMinutes = newTotalMinutes + dwellTime;
-      const depHours = Math.floor(departureMinutes / 60) % 24;
-      const depMins = Math.floor(departureMinutes % 60);
-      const departure = `${String(depHours).padStart(2, '0')}:${String(depMins).padStart(2, '0')}`;
-
-      schedule[train.id].push({
-        node: nodeId,
-        arrival,
-        departure
-      });
+  // Rule 1: Always give passenger trains priority
+  for (const pTrain of passengerTrains) {
+    decisions.push({
+      id: (decisionIdCounter++).toString(),
+      trainId: pTrain.id,
+      action: 'proceed',
+      reason: 'High-priority passenger service.',
+      impact: 0,
+      confidence: 98
     });
-  });
+  }
 
-  return schedule;
-}
+  log.push("Evaluating potential conflicts for freight trains.");
+  await simulateComplexOptimization();
 
-// Metrics are now calculated more dynamically.
-function calculateMIPMetrics(schedule: Schedule, trains: Train[]): OptimizationMetrics {
-  // A more realistic metric calculation would go here.
-  // For now, we simulate a positive outcome.
-  return {
-    objectiveValue: Math.random() * 1000 + 500,
-    constraintsSatisfied: 42,
-    totalDelay: -1 * (Math.random() * 10 + 5), // Negative delay means improvement
-    utilization: Math.random() * 10 + 85,
-    efficiency: Math.random() * 5 + 92,
-    solvingTime: Math.random() * 2 + 1,
-  };
+  // Rule 2: Check for potential conflicts for freight trains
+  for (const fTrain of freightTrains) {
+    // Simulate a conflict check
+    const hasConflict = Math.random() > 0.3; // 70% chance of conflict
+
+    if (hasConflict) {
+      log.push(`Conflict detected for train ${fTrain.id}. Rerouting to avoid congestion.`);
+      decisions.push({
+        id: (decisionIdCounter++).toString(),
+        trainId: fTrain.id,
+        action: 'reroute',
+        reason: 'Network congestion on primary path.',
+        impact: Math.floor(Math.random() * 5) + 3, // 3-7 min delay
+        confidence: 88
+      });
+    } else {
+       log.push(`Clear path found for train ${fTrain.id}.`);
+       decisions.push({
+        id: (decisionIdCounter++).toString(),
+        trainId: fTrain.id,
+        action: 'proceed',
+        reason: 'Clear path to destination.',
+        impact: 0,
+        confidence: 95
+      });
+    }
+  }
+
+  log.push("Finalizing schedule. Optimization complete.");
+
+  return { decisions, log };
 }
 

@@ -3,10 +3,8 @@ export interface Node {
   name: string
   type: "station" | "junction" | "terminal" | "yard" | "crossing"
   capacity: number
-  // The map requires coordinates. Our law must recognize them.
-  // They are optional because not all nodes in all systems may have them.
-  lat?: number
-  lon?: number
+  lat: number
+  lon: number
 }
 
 export interface Edge {
@@ -16,11 +14,19 @@ export interface Edge {
   length: number
   maxSpeed: number
   capacity: number
+  // NEW: The status of a track, essential for modeling disruptions.
+  status: 'open' | 'closed'
 }
 
 export interface RailwayNetwork {
   nodes: Node[]
   edges: Edge[]
+}
+
+export interface TrainStop {
+  node: string
+  arrival: string
+  departure: string
 }
 
 export interface Train {
@@ -31,12 +37,6 @@ export interface Train {
   schedule: TrainStop[]
   maxSpeed: number
   length: number
-}
-
-export interface TrainStop {
-  node: string
-  arrival: string
-  departure: string
 }
 
 export interface Schedule {
@@ -88,5 +88,14 @@ export interface OptimizationMetrics {
   utilization: number
   efficiency: number
   solvingTime: number
+}
+
+export interface Decision {
+  id: string
+  trainId: string
+  action: 'hold' | 'proceed' | 'reroute' | 'merge'
+  reason: string
+  impact: number
+  confidence: number
 }
 
