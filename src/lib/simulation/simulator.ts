@@ -1,5 +1,8 @@
 // lib/simulation/simulator.ts
-import { RailwayNetwork, Schedule, SimulationOptions, SimulationResults, SimulationEvent, TimelineEvent } from '@/utils/types';
+// All import paths are now corrected to the new source of truth in /lib.
+import { RailwayNetwork, Schedule, SimulationOptions, SimulationResults, SimulationEvent, TimelineEvent } from '@/lib/types';
+import { timeToMinutes, minutesToTime } from '@/lib/utils';
+
 
 export function runSimulation(network: RailwayNetwork, schedule: Schedule, options?: SimulationOptions): SimulationResults {
   const events: SimulationEvent[] = [];
@@ -16,14 +19,18 @@ export function runSimulation(network: RailwayNetwork, schedule: Schedule, optio
   Object.entries(schedule).forEach(([trainId, trainSchedule]) => {
     trainSchedule.forEach((stop, index) => {
       // Simulate potential delays and events
-      const delay = Math.random() * 5; // Random delay between 0-5 minutes
+      // We'll make the simulation slightly more realistic.
+      const isDelayed = Math.random() > (options?.randomEvents ? 0.7 : 0.9); // 30% chance of delay if random events are on
+      const delay = isDelayed ? Math.floor(Math.random() * 10) + 1 : 0; // Random delay between 1-10 minutes
       const hasConflict = Math.random() > 0.8; // 20% chance of conflict
+
+      const actualArrivalTime = addDelay(stop.arrival, delay);
 
       events.push({
         trainId,
         node: stop.node,
         scheduledArrival: stop.arrival,
-        actualArrival: addDelay(stop.arrival, delay),
+        actualArrival: actualArrivalTime,
         delay,
         conflict: hasConflict,
         timestamp: new Date().toISOString()
@@ -33,7 +40,7 @@ export function runSimulation(network: RailwayNetwork, schedule: Schedule, optio
     });
   });
 
-  // Calculate performance metrics
+  // Calculate performance metrics from the generated events
   metrics.onTimePerformance = calculateOnTimePerformance(events);
   metrics.averageDelay = calculateAverageDelay(events);
   metrics.maxDelay = calculateMaxDelay(events);
@@ -43,45 +50,56 @@ export function runSimulation(network: RailwayNetwork, schedule: Schedule, optio
     events,
     metrics,
     timeline: generateTimeline(events),
-    warnings: metrics.conflicts > 0 ? [`${metrics.conflicts} conflicts detected`] : []
+    warnings: metrics.conflicts > 0 ? [`${metrics.conflicts} potential conflicts detected`] : []
   };
 }
 
+// A more robust way to handle time addition using our utility functions.
 function addDelay(time: string, delayMinutes: number): string {
-  const [hours, minutes] = time.split(':').map(Number);
-  const totalMinutes = hours * 60 + minutes + delayMinutes;
-  const newHours = Math.floor(totalMinutes / 60) % 24;
-  const newMinutes = Math.floor(totalMinutes % 60);
-  return `${newHours}:${newMinutes.toString().padStart(2, '0')}`;
+  if (delayMinutes === 0) return time;
+  const totalMinutes = timeToMinutes(time) + delayMinutes;
+  return minutesToTime(totalMinutes);
 }
 
 function calculateOnTimePerformance(events: SimulationEvent[]): number {
-  const onTimeEvents = events.filter(event => event.delay <= 2);
+  if (events.length === 0) return 100;
+  const onTimeThreshold = 5; // Trains delayed by 5 mins or less are "on time"
+  const onTimeEvents = events.filter(event => event.delay <= onTimeThreshold);
   return (onTimeEvents.length / events.length) * 100;
 }
 
 function calculateAverageDelay(events: SimulationEvent[]): number {
+  if (events.length === 0) return 0;
   return events.reduce((sum, event) => sum + event.delay, 0) / events.length;
 }
 
 function calculateMaxDelay(events: SimulationEvent[]): number {
+    if (events.length === 0) return 0;
   return Math.max(...events.map(event => event.delay));
 }
 
 function calculateResourceUtilization(network: RailwayNetwork, events: SimulationEvent[]): number {
+  // A simplified placeholder for a very complex calculation.
   const totalCapacity = network.nodes.reduce((sum, node) => sum + node.capacity, 0);
-  const averageUtilization = events.length / totalCapacity;
-  return Math.min(averageUtilization * 100, 100);
+  if (totalCapacity === 0) return 0;
+  // Let's assume each event occupies a resource for an average of 15 minutes.
+  const totalOccupancyMinutes = events.length * 15;
+  const totalAvailableMinutes = totalCapacity * 60; // Assuming a 1-hour window.
+  const utilization = (totalOccupancyMinutes / totalAvailableMinutes) * 100;
+  return Math.min(utilization, 100); // Cap at 100%
 }
 
 function generateTimeline(events: SimulationEvent[]): TimelineEvent[] {
   return events
-    .sort((a, b) => a.actualArrival.localeCompare(b.actualArrival))
-    .map(event => ({
+    .sort((a, b) => timeToMinutes(a.actualArrival) - timeToMinutes(b.actualArrival))
+    .map((event, idx) => ({
+      id: `${event.trainId}-${event.node}-${event.actualArrival}-${idx}`,
+      trainId: event.trainId,
       time: event.actualArrival,
-      train: event.trainId,
       location: event.node,
-      event: event.conflict ? 'conflict' : 'arrival',
+      status: event.conflict ? 'conflict' : (event.delay > 0 ? 'delayed' : 'on_time'),
+      type: event.conflict ? 'conflict' : (event.delay > 0 ? 'delay' : 'arrival'),
       details: event
     }));
 }
+

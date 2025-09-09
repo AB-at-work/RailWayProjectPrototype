@@ -1,59 +1,97 @@
-// components/DecisionPanel/DecisionTable.tsx
-interface Decision {
-  id: string;
-  trainId: string;
-  action: 'hold' | 'proceed' | 'reroute' | 'merge';
-  reason: string;
-  impact: number;
-  confidence: number;
+"use client"
+
+import { Badge } from "@/components/UI/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/UI/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/UI/table"
+
+// This component is no longer static. It is a dynamic display for API results.
+// We define a clear type for the decisions it will receive.
+export interface Decision {
+  id: string
+  trainId: string
+  action: 'hold' | 'proceed' | 'reroute' | 'merge'
+  reason: string
+  impact: number
+  confidence: number
 }
 
-export default function DecisionTable() {
-  const decisions: Decision[] = [
+// The default, hardcoded data is now just a placeholder for the initial view.
+const placeholderDecisions: Decision[] = [
     { id: '1', trainId: 'T-234', action: 'hold', reason: 'Conflict at Junction B', impact: -2, confidence: 92 },
     { id: '2', trainId: 'T-567', action: 'proceed', reason: 'Clear path to destination', impact: 0, confidence: 98 },
     { id: '3', trainId: 'T-891', action: 'reroute', reason: 'Track maintenance on primary route', impact: 5, confidence: 85 }
-  ];
+];
 
-  const getActionColor = (action: string) => {
+
+interface DecisionTableProps {
+  decisions?: Decision[] // The decisions are now optional props.
+  isLoading: boolean
+}
+
+export default function DecisionTable({ decisions = placeholderDecisions, isLoading }: DecisionTableProps) {
+  const getActionVariant = (action: Decision['action']) => {
     switch (action) {
-      case 'hold': return 'bg-yellow-100 text-yellow-800';
-      case 'proceed': return 'bg-green-100 text-green-800';
-      case 'reroute': return 'bg-blue-100 text-blue-800';
-      case 'merge': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'hold': return 'hold';
+      case 'proceed': return 'proceed';
+      case 'reroute': return 'reroute';
+      default: return 'default';
     }
-  };
+  }
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</h2>
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-300">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Train</th>
-              <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Action</th>
-              <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Impact (min)</th>
-              <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Confidence</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {decisions.map((decision) => (
-              <tr key={decision.id}>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{decision.trainId}</td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm">
-                  <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getActionColor(decision.action)}`}>
-                    {decision.action}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{decision.impact}</td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{decision.confidence}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    <Card>
+      <CardHeader>
+        <CardTitle>Recommended Actions</CardTitle>
+        <CardDescription>
+          AI-generated recommendations to optimize network flow.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Train</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead className="text-right">Impact (min)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="h-24 text-center">
+                  Calculating optimal schedule...
+                </TableCell>
+              </TableRow>
+            ) : (
+              decisions.map((decision) => (
+                <TableRow key={decision.id}>
+                  <TableCell className="font-medium">{decision.trainId}</TableCell>
+                  <TableCell>
+                    <Badge variant={getActionVariant(decision.action)}>{decision.action}</Badge>
+                  </TableCell>
+                  <TableCell className={`text-right font-semibold ${decision.impact < 0 ? 'text-destructive' : 'text-green-500'}`}>
+                    {decision.impact > 0 ? `+${decision.impact}`: decision.impact}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
 }
+

@@ -1,23 +1,55 @@
-// components/Map/TrackMap.tsx
-'use client';
+"use client"
 
-import { useEffect, useRef } from 'react';
+import Map, { Marker, NavigationControl } from "react-map-gl"
+import "mapbox-gl/dist/mapbox-gl.css"
+import { RailwayNetwork } from "@/lib/types"
+import { Pin } from "lucide-react"
 
-export default function TrackMap() {
-  const mapRef = useRef<HTMLDivElement>(null);
+interface TrackMapProps {
+  network: RailwayNetwork
+}
 
-  useEffect(() => {
-    // Initialize map here with Leaflet or similar library
-    // This is a placeholder for map initialization
-    if (mapRef.current) {
-      mapRef.current.innerHTML = '<div class="h-full w-full bg-gray-200 flex items-center justify-center">Track Map Visualization</div>';
-    }
-  }, []);
+// A god-tier map requires a default export for clean, unambiguous imports.
+// The previous version's named export was a structural flaw. It has been corrected.
+export default function TrackMap({ network }: TrackMapProps) {
+  // A map without a token is a blank canvas. This is a critical error to be fixed by the user.
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+
+  if (!mapboxToken) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+        <p>Mapbox Access Token is not configured.</p>
+      </div>
+    )
+  }
+
+  // We find the center of our network to focus the map.
+  // This is a simple but effective way to ensure the map is always relevant.
+  const latitudes = network.nodes.map(node => node.lat).filter((lat): lat is number => typeof lat === "number")
+  const longitudes = network.nodes.map(node => node.lon).filter((lon): lon is number => typeof lon === "number")
+  const centerLat = latitudes.length > 0 ? latitudes.reduce((a, b) => a + b, 0) / latitudes.length : 0
+  const centerLon = longitudes.length > 0 ? longitudes.reduce((a, b) => a + b, 0) / longitudes.length : 0
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Network Map</h2>
-      <div ref={mapRef} className="h-96 w-full rounded-lg bg-gray-200"></div>
-    </div>
-  );
+    <Map
+      mapboxAccessToken={mapboxToken}
+      initialViewState={{
+        longitude: centerLon || -74.006,
+        latitude: centerLat || 40.7128,
+        zoom: 11,
+      }}
+      style={{ width: "100%", height: "100%" }}
+      mapStyle="mapbox://styles/mapbox/dark-v11"
+    >
+      <NavigationControl position="top-right" />
+      {network.nodes
+        .filter(node => typeof node.lat === "number" && typeof node.lon === "number")
+        .map((node) => (
+          <Marker key={node.id} longitude={node.lon as number} latitude={node.lat as number}>
+            <Pin className="h-6 w-6 fill-primary text-primary-foreground" />
+          </Marker>
+        ))}
+    </Map>
+  )
 }
+

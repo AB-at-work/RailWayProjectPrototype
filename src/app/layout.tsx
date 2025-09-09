@@ -1,35 +1,47 @@
-// app/layout.tsx
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import Navbar from '@/components/Layout/Navbar';
-import Sidebar from '@/components/Layout/Sidebar';
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { cn } from '@/lib/utils'
+import { ThemeProvider } from '@/components/theme-provider'
+import Sidebar from '@/components/Layout/Sidebar'
 
-const inter = Inter({ subsets: ['latin'] });
+const fontSans = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+})
 
 export const metadata: Metadata = {
-  title: 'Railway AI Optimizer',
-  description: 'Real-time railway network optimization and simulation',
-};
+  title: 'RailAI: Intelligent Network Optimizer',
+  description: 'A legendary tool for real-time railway network optimization and simulation.',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen bg-gray-100">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Navbar />
-            <main className="flex-1 overflow-x-hidden overflow-y-auto">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
               {children}
             </main>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

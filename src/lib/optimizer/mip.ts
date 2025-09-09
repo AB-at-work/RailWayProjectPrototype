@@ -1,5 +1,6 @@
 // lib/optimizer/mip.ts
-import { RailwayNetwork, Train, Schedule } from '@/utils/types';
+// This import path is now corrected to the new source of truth.
+import { RailwayNetwork, Train, Schedule } from '@/lib/types';
 
 export async function optimizeSchedule(network: RailwayNetwork, trains: Train[]): Promise<{ schedule: Schedule, metrics: any, log: string[] }> {
   const log: string[] = [];
@@ -54,13 +55,17 @@ function calculateOptimalTime(baseTime: string, nodeId: string, train: Train, ne
   const optimizationFactor = node ? Math.sqrt(node.capacity) : 1;
 
   const optimizedMinutes = Math.floor(minutes * optimizationFactor);
-  return `${hours}:${optimizedMinutes.toString().padStart(2, '0')}`;
+  return `${String(hours).padStart(2, '0')}:${String(optimizedMinutes).padStart(2, '0')}`;
 }
 
 function calculateOptimalDeparture(arrival: string, train: Train): string {
   const [hours, minutes] = arrival.split(':').map(Number);
   const optimalDwellTime = train.type === 'passenger' ? 3 : 4;
-  return `${hours}:${(minutes + optimalDwellTime).toString().padStart(2, '0')}`;
+  const departureTime = new Date();
+  departureTime.setHours(hours);
+  departureTime.setMinutes(minutes + optimalDwellTime);
+
+  return `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`;
 }
 
 function calculateMIPMetrics(schedule: Schedule, trains: Train[]): any {

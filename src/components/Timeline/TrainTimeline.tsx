@@ -1,67 +1,80 @@
-// components/Timeline/TrainTimeline.tsx
-interface TimelineEvent {
-  id: string;
-  trainId: string;
-  station: string;
-  scheduledArrival: string;
-  actualArrival: string;
-  status: 'on-time' | 'delayed' | 'early';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/UI/card"
+import { Train } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { TrainTrack } from "lucide-react"
+
+interface TrainTimelineProps {
+  trains: Train[]
 }
 
-export default function TrainTimeline() {
-  const events: TimelineEvent[] = [
-    { id: '1', trainId: 'T-234', station: 'Central Station', scheduledArrival: '14:30', actualArrival: '14:32', status: 'delayed' },
-    { id: '2', trainId: 'T-567', station: 'North Junction', scheduledArrival: '14:45', actualArrival: '14:43', status: 'early' },
-    { id: '3', trainId: 'T-891', station: 'East Terminal', scheduledArrival: '15:00', actualArrival: '15:00', status: 'on-time' }
-  ];
+// We flatten the schedule of all trains into a single, sorted timeline of events.
+// This is a more robust, data-driven approach than the old hardcoded list.
+type TimelineEvent = {
+  trainId: string
+  node: string
+  time: string
+  type: 'arrival' | 'departure'
+}
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'on-time': return 'bg-green-100 text-green-800';
-      case 'delayed': return 'bg-yellow-100 text-yellow-800';
-      case 'early': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+export default function TrainTimeline({ trains }: TrainTimelineProps) {
+  const allEvents = trains
+    .flatMap((train) =>
+      train.schedule.flatMap((stop) => [
+        { trainId: train.id, node: stop.node, time: stop.arrival, type: 'arrival' as const },
+        { trainId: train.id, node: stop.node, time: stop.departure, type: 'departure' as const },
+      ])
+    )
+    .sort((a, b) => a.time.localeCompare(b.time))
+    .slice(0, 10); // Limit to the latest 10 events for a clean UI
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Train Timeline</h2>
-      <div className="flow-root">
-        <ul role="list" className="-mb-8">
-          {events.map((event, eventIdx) => (
-            <li key={event.id}>
-              <div className="relative pb-8">
-                {eventIdx !== events.length - 1 ? (
-                  <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
-                ) : null}
-                <div className="relative flex space-x-3">
-                  <div>
-                    <span className="h-8 w-8 rounded-full bg-gray-400 flex items-center justify-center ring-8 ring-white">
-                      <span className="text-white text-sm font-bold">T</span>
-                    </span>
-                  </div>
-                  <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                    <div>
-                      <p className="text-sm text-gray-900">
-                        Train {event.trainId} at {event.station}
-                      </p>
-                    </div>
-                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(event.status)}">
-                        {event.status}
-                      </span>
-                      <div className="text-xs text-gray-400">
-                        Scheduled: {event.scheduledArrival}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Network Event Log</CardTitle>
+        <CardDescription>
+          A real-time feed of train arrivals and departures across the network.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {allEvents.map((event, index) => (
+            <div key={index} className="relative flex items-start">
+              {/* Timeline Line */}
+              <div className="absolute left-4 top-5 h-full w-0.5 bg-border" />
+
+              {/* Icon */}
+              <div className={cn(
+                  "z-10 flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-background",
+                  event.type === 'arrival' ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+              )}>
+                <TrainTrack className="h-4 w-4" />
               </div>
-            </li>
+
+              {/* Content */}
+              <div className="ml-4 flex-grow">
+                <p className="font-semibold text-foreground">
+                  Train {event.trainId}{" "}
+                  <span className={cn(
+                    "font-normal",
+                     event.type === 'arrival' ? "text-green-400" : "text-red-400"
+                  )}>
+                    {event.type === 'arrival' ? 'arrived at' : 'departed from'}
+                  </span>{" "}
+                  {event.node}
+                </p>
+                <p className="text-sm text-muted-foreground">{event.time}</p>
+              </div>
+            </div>
           ))}
-        </ul>
-      </div>
-    </div>
-  );
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
+

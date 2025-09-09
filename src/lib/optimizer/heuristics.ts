@@ -1,5 +1,6 @@
 // lib/optimizer/heuristics.ts
-import { RailwayNetwork, Train, Schedule } from '@/utils/types';
+// This import path is now corrected to the new source of truth.
+import { RailwayNetwork, Train, Schedule, Node } from '@/lib/types';
 
 export function heuristicSchedule(network: RailwayNetwork, trains: Train[]): { schedule: Schedule, metrics: any, log: string[] } {
   const log: string[] = [];
@@ -33,26 +34,37 @@ export function heuristicSchedule(network: RailwayNetwork, trains: Train[]): { s
   return { schedule: optimizedSchedule, metrics, log };
 }
 
-function adjustTimeBasedOnCongestion(baseTime: string, node: any, order: number): string {
+function adjustTimeBasedOnCongestion(baseTime: string, node: Node, order: number): string {
   // Simple congestion adjustment logic
   const congestionFactor = node.capacity / (order + 1);
   const [hours, minutes] = baseTime.split(':').map(Number);
-  const adjustedMinutes = Math.floor(minutes * congestionFactor);
-  return `${hours}:${adjustedMinutes.toString().padStart(2, '0')}`;
+  const adjustedMinutes = Math.floor(minutes * (1 + (1 - congestionFactor) * 0.1)); // A more subtle adjustment
+
+  const adjustmentTime = new Date();
+  adjustmentTime.setHours(hours);
+  adjustmentTime.setMinutes(minutes + adjustedMinutes);
+
+  return `${String(adjustmentTime.getHours()).padStart(2, '0')}:${String(adjustmentTime.getMinutes()).padStart(2, '0')}`;
 }
 
-function calculateDeparture(arrival: string, node: any, train: Train): string {
+function calculateDeparture(arrival: string, node: Node, train: Train): string {
   const [hours, minutes] = arrival.split(':').map(Number);
-  const dwellTime = train.type === 'passenger' ? 2 : 5;
-  return `${hours}:${(minutes + dwellTime).toString().padStart(2, '0')}`;
+  const dwellTime = train.type === 'passenger' ? 2 : 5; // Dwell time in minutes
+
+  const departureTime = new Date();
+  departureTime.setHours(hours);
+  departureTime.setMinutes(minutes + dwellTime);
+
+  return `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`;
 }
 
 function calculateMetrics(schedule: Schedule, trains: Train[]): any {
   // Calculate basic performance metrics
   return {
     totalTrains: trains.length,
-    totalDelay: 0,
-    utilization: 87,
-    efficiency: 92
+    totalDelay: 0, // Placeholder
+    utilization: 87, // Placeholder
+    efficiency: 92, // Placeholder
   };
 }
+
