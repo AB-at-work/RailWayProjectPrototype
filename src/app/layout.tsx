@@ -4,6 +4,8 @@ import './globals.css'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@/components/theme-provider'
 import Sidebar from '@/components/Layout/Sidebar'
+import { SettingsProvider } from "@/context/SettingsContext"
+
 
 const fontSans = Inter({
   subsets: ['latin'],
@@ -15,11 +17,7 @@ export const metadata: Metadata = {
   description: 'A legendary tool for real-time railway network optimization and simulation.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -34,12 +32,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
-              {children}
-            </main>
-          </div>
+          <SettingsProvider>
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+                {children}
+              </main>
+            </div>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -21,7 +21,8 @@ export default function NetworkMapClient({ initialNetwork, initialTrains }: Netw
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
   const [liveMode, setLiveMode] = useState(true)
 
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+
 
   // Calculate network center
   const latitudes = network.nodes.map(node => node.lat).filter((lat): lat is number => typeof lat === "number")
