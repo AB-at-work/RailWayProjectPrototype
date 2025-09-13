@@ -16,32 +16,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/UI/table"
+import { Decision } from "@/lib/types" // It now imports the law from the single source of truth.
 
-// This component is no longer static. It is a dynamic display for API results.
-// We define a clear type for the decisions it will receive.
-export interface Decision {
-  id: string
-  trainId: string
-  action: 'hold' | 'proceed' | 'reroute' | 'merge'
-  reason: string
-  impact: number
-  confidence: number
-}
+// The local, flawed definition has been annihilated.
 
-// The default, hardcoded data is now just a placeholder for the initial view.
 const placeholderDecisions: Decision[] = [
-    { id: '1', trainId: 'T-234', action: 'hold', reason: 'Conflict at Junction B', impact: -2, confidence: 92 },
-    { id: '2', trainId: 'T-567', action: 'proceed', reason: 'Clear path to destination', impact: 0, confidence: 98 },
-    { id: '3', trainId: 'T-891', action: 'reroute', reason: 'Track maintenance on primary route', impact: 5, confidence: 85 }
+    { id: '1', trainId: 'T-234', action: 'hold', reason: 'Conflict at Junction B', impact: -2, confidence: 92, status: 'pending' },
+    { id: '2', trainId: 'T-567', action: 'proceed', reason: 'Clear path to destination', impact: 0, confidence: 98, status: 'pending' },
+    { id: '3', trainId: 'T-891', action: 'reroute', reason: 'Track maintenance on primary route', impact: 5, confidence: 85, status: 'pending' }
 ];
 
-
 interface DecisionTableProps {
-  decisions?: Decision[] // The decisions are now optional props.
+  decisions?: Decision[]
   isLoading: boolean
 }
 
-export default function DecisionTable({ decisions = placeholderDecisions, isLoading }: DecisionTableProps) {
+// The component now uses the placeholder with the correct 'status' property.
+export default function DecisionTable({ decisions, isLoading }: DecisionTableProps) {
+  const displayDecisions = decisions && decisions.length > 0 ? decisions : placeholderDecisions;
+
   const getActionVariant = (action: Decision['action']) => {
     switch (action) {
       case 'hold': return 'hold';
@@ -76,7 +69,7 @@ export default function DecisionTable({ decisions = placeholderDecisions, isLoad
                 </TableCell>
               </TableRow>
             ) : (
-              decisions.map((decision) => (
+              displayDecisions.map((decision) => (
                 <TableRow key={decision.id}>
                   <TableCell className="font-medium">{decision.trainId}</TableCell>
                   <TableCell>

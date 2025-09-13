@@ -1,22 +1,33 @@
+// src/app/simulation/page.tsx
 "use client";
 
 import { useState } from "react";
 import { runSimulation } from "@/lib/simulation/simulator";
-import network from "@/lib/data/network.json";
-import trains from "@/lib/data/trains.json";
-import { Schedule } from "@/lib/types";
+import networkData from "@/lib/data/network.json";
+import trainData from "@/lib/data/trains.json";
+import { Schedule, RailwayNetwork } from "@/lib/types";
+import { Button } from "@/components/UI/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/UI/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/UI/table";
+import { Badge } from "@/components/UI/badge";
+import { Play, AlertTriangle, CheckCircle2, List, Hourglass } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Re-cast the imported JSON to the correct type
+const network: RailwayNetwork = networkData as RailwayNetwork;
+const trains = trainData;
 
 export default function SimulationPage() {
   const [results, setResults] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Convert trains.json into a Schedule object
   const buildSchedule = (): Schedule => {
     const schedule: Schedule = {};
     trains.trains.forEach((train: any) => {
-      schedule[train.id] = train.route.map((stop: any) => ({
+      schedule[train.id] = train.schedule.map((stop: any) => ({
         node: stop.node,
         arrival: stop.arrival,
+        departure: stop.departure,
       }));
     });
     return schedule;
@@ -24,94 +35,140 @@ export default function SimulationPage() {
 
   const handleRunSimulation = () => {
     setLoading(true);
-    try {
-      const schedule = buildSchedule();
-      // Ensure node.type matches the RailwayNetwork Node type union
-      const mappedNetwork = {
-        ...network,
-        nodes: network.nodes.map((node: any) => ({
-          ...node,
-          type: node.type as "station" | "junction" | "terminal" | "yard" | "crossing"
-        })),
-        edges: network.edges.map((edge: any) => ({
-          ...edge,
-          status: edge.status === "open" ? "open" : "closed"
-        }))
-      };
-      const simResults = runSimulation(mappedNetwork, schedule, { randomEvents: true });
-      setResults(simResults);
-    } catch (err) {
-      console.error("Simulation error:", err);
-      alert("Simulation failed. Check console for details.");
-    } finally {
-      setLoading(false);
+    setResults(null);
+    // Use a timeout to simulate a computation and allow the UI to update
+    setTimeout(() => {
+      try {
+        const schedule = buildSchedule();
+        const simResults = runSimulation(network, schedule, { randomEvents: true });
+        setResults(simResults);
+      } catch (err) {
+        console.error("Simulation error:", err);
+        alert("Simulation failed. Check console for details.");
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "conflict": return "destructive";
+      case "delayed": return "hold"; // Using 'hold' variant for yellow color
+      default: return "proceed"; // Using 'proceed' variant for green color
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Run Simulation</h1>
+    <div className="p-4 md:p-8 space-y-8">
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight">Simulation Environment</h1>
+        <p className="text-muted-foreground">Test network resilience and predict outcomes under various conditions.</p>
+      </div>
 
-      <button
-        onClick={handleRunSimulation}
-        disabled={loading}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? "Running..." : "Run Simulation"}
-      </button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Run New Simulation</CardTitle>
+          <CardDescription>
+            Trigger a full simulation based on the baseline schedule and random disruption events.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleRunSimulation} disabled={loading} size="lg">
+            {loading ? (
+              <>
+                <Hourglass className="mr-2 h-4 w-4 animate-spin" />
+                Calculating...
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Run Full Simulation
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       {results && (
-        <div className="mt-6 space-y-6">
-          {/* Metrics */}
-          <div className="p-4 bg-gray-100 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Simulation Metrics</h2>
-            <ul className="list-disc list-inside">
-              <li>Total Trains: {results.metrics.totalTrains}</li>
-              <li>On-Time Performance: {results.metrics.onTimePerformance.toFixed(2)}%</li>
-              <li>Average Delay: {results.metrics.averageDelay.toFixed(2)} mins</li>
-              <li>Max Delay: {results.metrics.maxDelay} mins</li>
-              <li>Resource Utilization: {results.metrics.resourceUtilization.toFixed(2)}%</li>
-              <li>Conflicts: {results.metrics.conflicts}</li>
-            </ul>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1 space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Simulation Metrics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">On-Time Performance</span>
+                  <Badge variant="proceed">{results.metrics.onTimePerformance.toFixed(1)}%</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Average Delay</span>
+                  <Badge variant="hold">{results.metrics.averageDelay.toFixed(1)} mins</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Conflicts Detected</span>
+                  <Badge variant="destructive">{results.metrics.conflicts}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+             {results.warnings && results.warnings.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    Warnings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground">
+                    {results.warnings.map((w: string, idx: number) => (
+                      <li key={idx}>{w}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+             )}
           </div>
-
-          {/* Timeline */}
-          <div className="p-4 bg-gray-100 rounded-lg shadow max-h-[400px] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-2">Timeline of Events</h2>
-            {results.timeline.length === 0 ? (
-              <p>No events recorded.</p>
-            ) : (
-              <ul className="space-y-2">
-                {results.timeline.map((event: any, idx: number) => (
-                  <li
-                    key={idx}
-                    className={`p-2 rounded border ${
-                      event.status === "conflict"
-                        ? "border-red-500 bg-red-50"
-                        : event.status === "delayed"
-                        ? "border-yellow-500 bg-yellow-50"
-                        : "border-green-500 bg-green-50"
-                    }`}
-                  >
-                    <strong>Train {event.trainId}</strong> at {event.location} →{" "}
-                    {event.status.toUpperCase()} (Delay: {event.details.delay} mins)
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="lg:col-span-2">
+             <Card>
+              <CardHeader>
+                <CardTitle>Timeline of Events</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                 <div className="max-h-[600px] overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Train</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Delay</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {results.timeline.map((event: any, idx: number) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-mono">{event.time}</TableCell>
+                          <TableCell className="font-medium">{event.trainId}</TableCell>
+                          <TableCell>{network.nodes.find(n => n.id === event.location)?.name || event.location}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(event.status)}>
+                              {event.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={cn("text-right font-semibold", event.details.delay > 0 && "text-destructive")}>
+                            {event.details.delay} min
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-
-          {/* Warnings */}
-          {results.warnings && results.warnings.length > 0 && (
-            <div className="p-4 bg-yellow-100 border border-yellow-400 rounded">
-              <h2 className="font-semibold">Warnings</h2>
-              <ul className="list-disc list-inside">
-                {results.warnings.map((w: string, idx: number) => (
-                  <li key={idx}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       )}
     </div>

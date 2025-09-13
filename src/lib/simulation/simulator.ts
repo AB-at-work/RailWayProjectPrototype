@@ -104,4 +104,3 @@ function generateTimeline(events: SimulationEvent[]): TimelineEvent[] {
       event: event.conflict ? 'conflict' : (event.delay > 0 ? 'delay' : 'arrival') // Changed to string type
     }));
 }
-

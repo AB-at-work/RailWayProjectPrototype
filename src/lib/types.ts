@@ -14,7 +14,6 @@ export interface Edge {
   length: number
   maxSpeed: number
   capacity: number
-  // NEW: The status of a track, essential for modeling disruptions.
   status: 'open' | 'closed'
 }
 
@@ -60,12 +59,15 @@ export interface SimulationEvent {
 }
 
 export interface TimelineEvent {
+  id: string
+  trainId: string
   time: string
-  train: string
   location: string
-  event: string
+  status: 'conflict' | 'delayed' | 'on_time'
+  type: 'arrival' | 'departure' | 'conflict' | 'delay'
   details: SimulationEvent
 }
+
 
 export interface SimulationResults {
   events: SimulationEvent[]
@@ -90,6 +92,7 @@ export interface OptimizationMetrics {
   solvingTime: number
 }
 
+// THE FINAL UPGRADE: A decision now has a status to track the commander's will.
 export interface Decision {
   id: string
   trainId: string
@@ -97,5 +100,6 @@ export interface Decision {
   reason: string
   impact: number
   confidence: number
+  status: 'pending' | 'accepted' | 'rejected'
 }
 
